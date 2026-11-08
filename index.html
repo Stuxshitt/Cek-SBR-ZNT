@@ -75,7 +75,7 @@ input[type=number]{width:96px;font-family:var(--f-mono)}
 .field label,.flabel{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .field small{color:var(--muted);font-size:.75rem}
 .note{font-size:.82rem;color:var(--muted);max-width:80ch;margin:0}
-.gfilter{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.gfilter{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);position:relative;z-index:60}
 .gfilter .note{flex:1;min-width:220px;align-self:center}
 .qbox{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end;flex-basis:100%;border-top:1px solid var(--line);padding-top:12px}
 .qbox input{width:240px;font-family:var(--f-mono)}
@@ -232,6 +232,19 @@ details.opt>summary{cursor:pointer;font-weight:600}
 .panel>.mapwrap.mapwrap{position:relative}
 .leaflet-control-layers-toggle.leaflet-control-layers-toggle{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 8l10 5 10-5-10-5Z' fill='%231F7A4D'/%3E%3Cpath d='m2 12 10 5 10-5M2 16l10 5 10-5' fill='none' stroke='%2315211D' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E");background-size:24px 24px;background-repeat:no-repeat;background-position:center;width:36px;height:36px}
 .pshint{position:absolute;left:50%;transform:translateX(-50%);bottom:26px;z-index:590;background:var(--surface);color:var(--ink);border:1px solid #E6007E;border-radius:999px;padding:4px 12px;font-size:.78rem;white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis}
+.ms{position:relative}
+.ms-btn{font:inherit;width:100%;min-width:180px;text-align:left;padding:7px 30px 7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-btn::after{content:"";position:absolute;right:11px;top:50%;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg)}
+.ms-btn.on{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--surface));font-weight:600}
+.ms-pop{position:absolute;z-index:1200;top:calc(100% + 4px);left:0;min-width:100%;width:max-content;max-width:min(360px,92vw);background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.16);padding:6px}
+.ms-act{display:flex;gap:6px;padding:2px 2px 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.ms-act button{font:inherit;font-size:.8rem;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--soft);color:var(--ink);cursor:pointer}
+.ms-list{max-height:min(320px,55vh);overflow:auto;display:flex;flex-direction:column}
+.ms-list label{display:flex;align-items:center;gap:8px;padding:6px 6px;border-radius:6px;cursor:pointer;font-size:.9rem}
+.ms-list label:hover{background:var(--soft)}
+.ms-list label span{flex:1}
+.ms-list small{color:var(--muted);font-variant-numeric:tabular-nums}
+.ms-list input{width:18px;height:18px;accent-color:var(--ok)}
 .gpsbtn{display:inline-flex;align-items:center;gap:6px;color:#1F5FD1;border-color:#1F5FD1}
 .gpsbtn.on{background:#1F5FD1;color:#fff}
 .gpsinfo{position:absolute;left:58px;right:58px;top:10px;margin:0 auto;z-index:600;max-width:440px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:4px solid #1F5FD1;border-radius:8px;padding:8px 12px;font-size:.84rem;line-height:1.45;box-shadow:0 2px 10px rgba(0,0,0,.14)}
@@ -1007,7 +1020,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <div class="gfilter">
     <div class="field"><label for="gStatus">Status sampel</label><select id="gStatus"></select></div>
-    <div class="field"><label for="gSv">Surveyor</label><select id="gSv"></select></div>
+    <div class="field"><span class="flabel">Kecamatan</span><div class="ms" id="msKec"><button type="button" class="ms-btn" aria-expanded="false" aria-haspopup="true">Semua kecamatan</button><div class="ms-pop" hidden></div></div></div>
+    <div class="field"><span class="flabel">Surveyor</span><div class="ms" id="msSv"><button type="button" class="ms-btn" aria-expanded="false" aria-haspopup="true">Semua surveyor</button><div class="ms-pop" hidden></div></div></div>
     <p class="note" id="gNote"></p>
     <div class="qbox">
       <div class="field"><label for="qMode">Cari sampel berdasarkan</label><select id="qMode"><option value="no">No. sampel</option><option value="idf">No. identifikasi</option></select></div>
@@ -1030,7 +1044,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="field"><span class="flabel">Jumlah titik di zona</span><div class="chips" id="nChips"></div></div>
       <div class="field"><label for="fStatus">Status</label><select id="fStatus">
         <option value="all">Semua</option><option value="gagal">SBR gagal</option><option value="lolos">SBR lolos</option><option value="na">SBR belum bisa (1 titik)</option><option value="kurang">Titik kurang dari minimum</option><option value="indiv">Sampel individual lebih dari batas</option></select></div>
-      <div class="field"><label for="fKec">Kecamatan</label><select id="fKec"></select></div>
       <div class="field"><label for="fQ">Cari NOZN / surveyor</label><input type="text" id="fQ" placeholder="misal 1376 atau Sri"></div>
       <div class="spacer"></div>
       <span class="copied" id="copied1" aria-live="polite"></span>
@@ -1336,7 +1349,8 @@ Object.assign(PICK, {
 const DEF_P = {thr:20, maxInd:1, minMode:"kak", tgl:"2026-12-31", status:"__all", pen:0, hgb:0, hp:0, tma:0, waktu:0};
 const S = { zone:null, zoneCount: SEED?SEED.zones:0, zoneName: SEED?"Zona_Layer":null, areas: ZAREA||{},
   sample:null, sampleName:null, sampleNote:"", map:{}, zIds:[], xy:[], P:{...DEF_P}, open:new Set(),
-  tab:"zona", fN:"all", fStatus:"all", fKec:"", fQ:"", mJenis:"all", gSv:"", tgt:{}, sim:{} };
+  tab:"zona", fN:"all", fStatus:"all", fKec:"", fQ:"", mJenis:"all", gSv:"", gSvs:new Set(), gKecs:new Set(), tgt:{}, sim:{} };
+let KEC_ITEMS=[], SV_ITEMS=[];
 const LS_P="znt-sbr-params-v4", LS_UI="znt-sbr-ui-v1";
 function saveP(){ try{ localStorage.setItem(LS_P, JSON.stringify(S.P)); }catch(e){} }
 function loadP(){ try{ const j=JSON.parse(localStorage.getItem(LS_P)||"null"); if(j) S.P={...DEF_P, ...j}; }catch(e){} try{ const u=JSON.parse(localStorage.getItem(LS_UI)||"null"); if(u&&u.tab) S.tab=u.tab; }catch(e){} }
@@ -1509,7 +1523,33 @@ function compute(){
 
 const isOk = st => /disetujui|approved|terverifikasi|valid/i.test(st) && !/belum|tidak|tolak|reject|batal/i.test(st);
 function stMatch(st){ const v=S.P.status; return v==="__all" || (v==="__ok" && isOk(st)) || (v==="__notok" && !isOk(st)) || st===v; }
-const svOk = z => !S.gSv || z.svs.includes(S.gSv);
+const nkec = k => String(k||"").replace(/^kecamatan\s*/i,"").replace(/\s+/g,"").toLowerCase();
+const svPass = sv => !S.gSvs.size || S.gSvs.has(sv);
+const kecPass = k => !S.gKecs.size || S.gKecs.has(nkec(k));
+const svOk = z => (!S.gSvs.size || z.svs.some(v=>S.gSvs.has(v))) && kecPass(z.kec);
+const ptOk = s => svPass(s.sv) && kecPass(s.kec);
+const filtOn = () => S.gSvs.size>0 || S.gKecs.size>0;
+/* multi-pilih (kecamatan / surveyor) */
+function msSetup(id, onChange){
+  const box=$(id), btn=box.querySelector(".ms-btn"), pop=box.querySelector(".ms-pop");
+  btn.addEventListener("click", e=>{ e.stopPropagation(); const open=pop.hidden; document.querySelectorAll(".ms-pop").forEach(p=>{ p.hidden=true; p.previousElementSibling.setAttribute("aria-expanded","false"); }); pop.hidden=!open; btn.setAttribute("aria-expanded",String(open)); });
+  pop.addEventListener("click", e=>e.stopPropagation());
+  pop.addEventListener("change", e=>{ const c=e.target.closest("input[data-v]"); if(!c) return; onChange(c.dataset.v, c.checked); });
+  pop.addEventListener("click", e=>{ const a=e.target.closest("[data-ms]"); if(!a) return; onChange(a.dataset.ms==="all"?"__all":"__none", true); });
+}
+document.addEventListener("click", ()=>document.querySelectorAll(".ms-pop").forEach(p=>{ if(!p.hidden){ p.hidden=true; p.previousElementSibling.setAttribute("aria-expanded","false"); } }));
+function msRender(id, items, set, allLabel, unit){
+  const box=$(id), btn=box.querySelector(".ms-btn"), pop=box.querySelector(".ms-pop");
+  const sig=items.map(i=>i.v+":"+i.n).join("|");
+  if(pop.dataset.sig!==sig){ pop.dataset.sig=sig;
+    pop.innerHTML=`<div class="ms-act"><button type="button" data-ms="all">Pilih semua</button><button type="button" data-ms="none">Kosongkan</button></div><div class="ms-list">`+
+      items.map(i=>`<label><input type="checkbox" data-v="${esc(i.v)}"> <span>${esc(i.label)}</span><small>${fmt(i.n)}</small></label>`).join("")+`</div>`; }
+  pop.querySelectorAll("input[data-v]").forEach(c=>{ c.checked=set.has(c.dataset.v); });
+  const chosen=items.filter(i=>set.has(i.v));
+  btn.textContent = !set.size ? allLabel : chosen.length===1 ? chosen[0].label : `${set.size} ${unit} dipilih`;
+  btn.classList.toggle("on", set.size>0);
+}
+function msToggle(set, items, v, on){ if(v==="__none") set.clear(); else if(v==="__all") items.forEach(i=>set.add(i.v)); else if(on) set.add(v); else set.delete(v); if(set.size===items.length) set.clear(); }
 
 /* ---------- analisa: rentang nilai tanah satu titik agar SBR zona <= target ---------- */
 function rangeFor(z, s, T){
@@ -1723,20 +1763,26 @@ function render(){
   const all=R.all||[], nOk=all.filter(s=>isOk(s.st)).length;
   const gs=$("gStatus"); gs.innerHTML=`<option value="__all">Semua status (${fmt(all.length)})</option><option value="__ok">Disetujui saja (${fmt(nOk)})</option><option value="__notok">Belum / tidak disetujui (${fmt(all.length-nOk)})</option>`+(R.statuses.length>1?`<optgroup label="Per status">${R.statuses.map(s=>`<option value="${esc(s)}">${esc(s)} (${fmt(R.stCount[s]||0)})</option>`).join("")}</optgroup>`:"");
   gs.value=P.status; if(gs.value!==P.status){ P.status="__all"; gs.value="__all"; }
-  const svc={}; for(const s of R.samples) if(s.sv) svc[s.sv]=(svc[s.sv]||0)+1;
-  const gv=$("gSv"); gv.innerHTML=`<option value="">Semua surveyor</option>`+Object.keys(svc).sort().map(s=>`<option value="${esc(s)}">${esc(s)} (${svc[s]} titik)</option>`).join("");
-  gv.value=S.gSv; if(gv.value!==S.gSv){ S.gSv=""; gv.value=""; }
-  $("gNote").textContent = S.gSv ? `Nampilin zona dan titik punya ${S.gSv}. SBR tetap dihitung dari semua titik di zona itu (sesuai filter status), jadi titik surveyor lain di zona yang sama ikut kehitung.` : (P.status!=="__all" ? "Filter status ngubah titik yang dipakai buat hitung nilai zona dan SBR." : "");
+  const svc={}; for(const s of R.samples) if(s.sv && kecPass(s.kec)) svc[s.sv]=(svc[s.sv]||0)+1;
+  const kcc={}, kcl={}; for(const s of R.samples){ const k=nkec(s.kec); if(!k) continue; kcc[k]=(kcc[k]||0)+1; if(!kcl[k]) kcl[k]=s.kec; }
+  for(const v of [...S.gSvs]) if(!(v in svc)) S.gSvs.delete(v);
+  for(const v of [...S.gKecs]) if(!(v in kcc)) S.gKecs.delete(v);
+  KEC_ITEMS=Object.keys(kcc).sort((a,b)=>kcl[a].localeCompare(kcl[b])).map(k=>({v:k,label:kcl[k],n:kcc[k]}));
+  SV_ITEMS=Object.keys(svc).sort().map(v=>({v,label:v,n:svc[v]}));
+  msRender("msKec", KEC_ITEMS, S.gKecs, "Semua kecamatan", "kecamatan");
+  msRender("msSv", SV_ITEMS, S.gSvs, "Semua surveyor", "surveyor");
+  const fdesc=[S.gKecs.size?(S.gKecs.size===1?"Kec. "+KEC_ITEMS.find(i=>S.gKecs.has(i.v)).label:S.gKecs.size+" kecamatan"):"", S.gSvs.size?(S.gSvs.size===1?[...S.gSvs][0]:S.gSvs.size+" surveyor"):""].filter(Boolean).join(" · ");
+  $("gNote").textContent = filtOn() ? `Nampilin zona dan titik ${fdesc} aja, di tabel dan di peta. SBR tetap dihitung dari semua titik di zona itu (sesuai filter status), jadi titik surveyor lain di zona yang sama ikut kehitung.` : (P.status!=="__all" ? "Filter status ngubah titik yang dipakai buat hitung nilai zona dan SBR." : "");
   const Z=R.zones.filter(svOk);
   const cnt={gagal:0,lolos:0,na:0}; for(const z of Z) cnt[z.sbrState]++;
   const kurang=Z.filter(z=>z.kurang>0).length;
   $("hdrMeta").innerHTML = S.sampleName ? `${esc(S.sampleName)}<br>${fmt(R.samples.length)} sampel · ${fmt(Z.length)} zona` : "Belum ada data sampel";
-  $("c_zona").textContent=fmt(Z.length); $("c_masalah").textContent=fmt(R.probs.filter(p=>!S.gSv||p.s.sv===S.gSv).length);
+  $("c_zona").textContent=fmt(Z.length); $("c_masalah").textContent=fmt(R.probs.filter(p=>ptOk(p.s)).length);
   for(const t of ["zona","peta","masalah","rumus"]){ $("t_"+t).setAttribute("aria-selected", String(S.tab===t)); $("p_"+t).hidden = S.tab!==t; }
   const tile=(key,cls,label,v,sub)=>`<button class="stat ${cls}${S.fStatus===key?" on":""}" data-f="${key}"><span class="eyebrow">${label}</span><span class="v">${v}</span><span class="s">${sub}</span></button>`;
   const dinilai=cnt.gagal+cnt.lolos;
   $("summary").innerHTML =
-    tile("all","","Zona bersampel",fmt(Z.length),S.gSv?`yang ada titik ${esc(S.gSv)}`:`dari ${fmt(S.zoneCount||0)} zona`)+
+    tile("all","","Zona bersampel",fmt(Z.length),filtOn()?`sesuai filter kecamatan/surveyor`:`dari ${fmt(S.zoneCount||0)} zona`)+
     tile("gagal","bad",`SBR gagal (&gt; ${P.thr}%)`,fmt(cnt.gagal),`dari ${fmt(dinilai)} zona yang ≥ 2 titik`)+
     tile("lolos","ok",`SBR lolos (≤ ${P.thr}%)`,fmt(cnt.lolos),dinilai?`${pct(cnt.lolos/dinilai*100,0)} dari zona yang bisa dihitung`:"belum ada")+
     tile("na","","SBR belum bisa",fmt(cnt.na),"cuma 1 titik di zona")+
@@ -1745,7 +1791,6 @@ function render(){
   const cN={all:Z.length,"1":0,"2":0,"3":0,"4":0}; for(const z of Z){ const k=nBucket(z.n); cN[k]=(cN[k]||0)+1; }
   $("nChips").innerHTML=[["all","Semua"],["1","1"],["2","2"],["3","3"],["4","> 3"]].map(([k,l])=>`<button class="chip" data-n="${k}" aria-pressed="${S.fN===k}">${l}<small>${cN[k]||0}</small></button>`).join("");
   const kecs=[...new Set(Z.map(z=>z.kec).filter(Boolean))].sort();
-  const fk=$("fKec"); fk.innerHTML=`<option value="">Semua kecamatan</option>`+kecs.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join(""); fk.value=S.fKec; if(fk.value!==S.fKec){ S.fKec=""; fk.value=""; }
   $("fStatus").value=S.fStatus;
   const q=S.fQ.trim().toLowerCase();
   const rows=Z.filter(z=>(S.fN==="all"||nBucket(z.n)===S.fN) && (S.fStatus==="all" || (S.fStatus==="kurang"? z.kurang>0 : S.fStatus==="indiv"? z.indOver : z.sbrState===S.fStatus)) && (!S.fKec||z.kec===S.fKec) && (!q || String(z.id).includes(q) || z.svs.some(s=>s.toLowerCase().includes(q))));
@@ -1784,10 +1829,10 @@ function renderZones(rows){
 function renderProbs(R){
   const svs=[...new Set(R.probs.map(p=>p.s.sv).filter(Boolean))].sort();
   $("mJenis").value=S.mJenis;
-  const rows=R.probs.filter(p=>(S.mJenis==="all"||p.s.prob===S.mJenis) && (!S.gSv||p.s.sv===S.gSv));
+  const rows=R.probs.filter(p=>(S.mJenis==="all"||p.s.prob===S.mJenis) && ptOk(p.s));
   const head=`<thead><tr><th>No.</th><th>No. ID</th><th>Surveyor</th><th>Tgl</th><th>NOZN</th><th>Kecamatan · Kelurahan</th><th class="n">Nilai tanah /m²</th><th class="n">Nilai zona /m²</th><th class="n">Deviasi</th><th class="n">SBR zona</th><th class="n">SBR tanpa titik ini</th><th class="n">Harga jual sekarang</th><th class="n">Rentang harga jual (SBR ≤ batas)</th><th>Masalah</th></tr></thead>`;
   const body=rows.map(({s,z})=>`<tr><td class="mono">${esc(s.no)}</td>${idCell(s)}<td>${esc(s.sv)}</td><td class="mono">${dmy(s.tgl)}</td><td class="mono"><b>${z?esc(z.id):"-"}</b></td><td>${esc(s.kec)}<div class="muted" style="font-size:.8rem">${esc(s.kel)}</div></td><td class="n">${s.ok?rp(s.nt):"-"}</td><td class="n">${z?rp(z.mean):"-"}</td><td class="n dev${Math.abs(s.dev||0)>S.P.thr?" hi":""}">${isFinite(s.dev)?sdev(s.dev):"-"}</td><td class="n">${z?pct(z.sbr):"-"}</td><td class="n">${isFinite(s.sbrWo)?pct(s.sbrWo):"-"}</td><td class="n">${rp(s.H)}</td><td class="n">${(()=>{ if(!z||!s.ok||z.good.length<2) return "-"; const r=rangeFor(z,s,S.P.thr); return !r?"-":r.imp?"gak bisa":`${rp(r.Hlo)} – ${rp(r.Hhi)}`; })()}</td><td>${s.why.map(w=>`<div class="why${s.prob!=="sbr"?" w":""}">${esc(w)}</div>`).join("")}${(z&&s.ok)?diagnose(z,s).map(v=>`<div class="diag" style="min-width:0">${esc(v)}</div>`).join(""):""}</td></tr>`).join("");
-  $("pt").innerHTML = head+`<tbody>${body||`<tr><td colspan="14" class="muted">Gak ada sampel bermasalah${S.mJenis!=="all"||S.gSv?" buat filter ini":""}.</td></tr>`}</tbody>`;
+  $("pt").innerHTML = head+`<tbody>${body||`<tr><td colspan="14" class="muted">Gak ada sampel bermasalah${S.mJenis!=="all"||filtOn()?" buat filter ini":""}.</td></tr>`}</tbody>`;
 }
 function renderSlots(){
   const z=S.zone;
@@ -1806,7 +1851,8 @@ function bindParams(){
   $("p_minMode").value=S.P.minMode; $("p_minMode").onchange=e=>{ S.P.minMode=e.target.value; saveP(); render(); };
   $("p_tgl").value=S.P.tgl; $("p_tgl").onchange=e=>{ if(e.target.value){ S.P.tgl=e.target.value; saveP(); render(); } };
   $("gStatus").onchange=e=>{ S.P.status=e.target.value; saveP(); S.open.clear(); render(); };
-  $("gSv").onchange=e=>{ S.gSv=e.target.value; render(); };
+  msSetup("msKec", (v,on)=>{ msToggle(S.gKecs, KEC_ITEMS, v, on); mapFitted=false; render(); });
+  msSetup("msSv", (v,on)=>{ msToggle(S.gSvs, SV_ITEMS, v, on); mapFitted=false; render(); });
   if(S.P.pen||S.P.hgb||S.P.hp||S.P.tma||S.P.waktu) $("optAdj").open=true;
 }
 
@@ -1862,7 +1908,7 @@ function zonesTsv(){
 function probsTsv(){
   const R=last; if(!R) return "";
   const h=["No. sampel","No. ID","Surveyor","Tanggal","NOZN","Kecamatan","Kelurahan","Nilai tanah (Rp/m2)","Nilai zona (Rp/m2)","Deviasi (%)","SBR zona (%)","SBR tanpa titik ini (%)","Masalah"];
-  return [h.join("\t"),...R.probs.filter(p=>!S.gSv||p.s.sv===S.gSv).map(({s,z})=>[s.no,idShort(s),s.sv,s.tgl?dmy(s.tgl):"",z?z.id:"",s.kec,s.kel,s.ok?Math.round(s.nt):"",z&&isFinite(z.mean)?Math.round(z.mean):"",n1(s.dev),z?n1(z.sbr):"",n1(s.sbrWo),s.why.join("; ")].join("\t"))].join("\n");
+  return [h.join("\t"),...R.probs.filter(p=>ptOk(p.s)).map(({s,z})=>[s.no,idShort(s),s.sv,s.tgl?dmy(s.tgl):"",z?z.id:"",s.kec,s.kel,s.ok?Math.round(s.nt):"",z&&isFinite(z.mean)?Math.round(z.mean):"",n1(s.dev),z?n1(z.sbr):"",n1(s.sbrWo),s.why.join("; ")].join("\t"))].join("\n");
 }
 
 /* ---------- peta ---------- */
@@ -1947,6 +1993,13 @@ function pointHtml(s){
   ${s.why&&s.why.length?`<div style="margin-top:6px">${s.why.map(w=>`<div class="why${s.prob!=="sbr"?" w":""}" style="min-width:0">${esc(w)}</div>`).join("")}</div>`:""}
   ${z?`<button class="mbtn" data-goto="${esc(z.id)}">Buka di tabel zona</button>`:""}`;
 }
+const ZGK=new Map();
+function zoneGeoKec(id,p){ if(!S.gKecs.size) return ""; if(ZGK.has(id)) return ZGK.get(id); let k="";
+  if(BATAS){ const c=p.getBounds().getCenter(), x=c.lng, y=c.lat;
+    for(const f of BATAS.kec){ const g=f.geometry, polys=g.type==="Polygon"?[g.coordinates]:g.coordinates; let inside=false;
+      for(const poly of polys) for(const ring of poly){ for(let i=0,j=ring.length-1;i<ring.length;j=i++){ const xi=ring[i][0], yi=ring[i][1], xj=ring[j][0], yj=ring[j][1]; if(((yi>y)!==(yj>y)) && (x<(xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside; } }
+      if(inside){ k=f.properties.kec; break; } } }
+  ZGK.set(id,k); return k; }
 function renderMap(R){
   if(!ensureMap()) return;
   buildZones();
@@ -1955,7 +2008,8 @@ function renderMap(R){
   for(const [id,p] of zPolys){
     const z0=R.zById.get(id), z = z0 && svOk(z0) ? z0 : null;
     const zw=+$("zW").value;
-    if(!z) p._bs = showEmpty?{color:"#1F5FD1", weight:zw, opacity:1, fillColor:"#1F5FD1", fillOpacity:.06}:{opacity:0, fillOpacity:0};
+    if(z0 && !z) p._bs = {color:"#8C9792", weight:.6, opacity:.7, fillColor:"#8C9792", fillOpacity:0};   // zona bersampel yang gak masuk filter
+    else if(!z) p._bs = showEmpty && kecPass(zoneGeoKec(id,p)) ?{color:"#1F5FD1", weight:zw, opacity:1, fillColor:"#1F5FD1", fillOpacity:.06}:{opacity:0, fillOpacity:0};
     else { const col = z.sbrState==="gagal"?C.bad : z.sbrState==="lolos"?C.ok : C.zero;
       const stroke = z.sbrState==="gagal"?"#8E1F16" : z.sbrState==="lolos"?"#0F5A35" : "#3E4A45";
       p._bs = {color:stroke, weight:zw, opacity:1, fillColor:col, fillOpacity: z.sbrState==="gagal"?.45:.32}; }
@@ -1964,12 +2018,12 @@ function renderMap(R){
   PL.clearLayers();
   if($("mPts").checked){
     const pts=[...R.samples].sort((a,b)=>(a.prob?1:0)-(b.prob?1:0));
-    for(const s of pts){ if(S.gSv && s.sv!==S.gSv) continue; const q=S.xy[s.i]; if(!q) continue;
+    for(const s of pts){ if(!ptOk(s)) continue; const q=S.xy[s.i]; if(!q) continue;
       const fc = (s.prob==="sbr"||s.prob==="div")?C.bad : s.prob==="indkos"?C.zero : s.prob?C.warn : C.ink;
       const m=L.circleMarker(llConv()(q[0],q[1]),{radius: s.prob?5.5:3.5, color:C.surf, weight:1.2, fillColor:fc, fillOpacity:1});
       m.bindPopup(()=>pointHtml(s)); PL.addLayer(m); }
   }
-  setTimeout(()=>{ MAP.invalidateSize(); if(!mapFitted && ZL.getLayers().length){ const withS=[...R.zById.keys()].map(k=>zPolys.get(k)).filter(Boolean); const fg=L.featureGroup(withS.length?withS:ZL.getLayers()); MAP.fitBounds(fg.getBounds().pad(0.15)); mapFitted=true; } },0);
+  setTimeout(()=>{ MAP.invalidateSize(); if(!mapFitted && ZL.getLayers().length){ const withS=R.zones.filter(svOk).map(z=>zPolys.get(String(z.id))).filter(Boolean); const fg=L.featureGroup(withS.length?withS:ZL.getLayers()); MAP.fitBounds(fg.getBounds().pad(0.15)); mapFitted=true; } },0);
 }
 /* ---------- persil: digambar per kotak canvas, data dimuat per kotak 2 km cuma pas zoom dekat ---------- */
 const PS={cache:new Map(), pend:new Map(), layer:null, minZ:17, color:"#E6007E", sel:null, err:0};
@@ -2134,7 +2188,7 @@ document.querySelector(".tabs").addEventListener("click",e=>{ const b=e.target.c
 $("summary").addEventListener("click",e=>{ const b=e.target.closest("[data-f]"); if(b){ S.fStatus=b.dataset.f; render(); } });
 $("nChips").addEventListener("click",e=>{ const b=e.target.closest("[data-n]"); if(b){ S.fN=b.dataset.n; render(); } });
 $("fStatus").onchange=e=>{ S.fStatus=e.target.value; render(); };
-$("fKec").onchange=e=>{ S.fKec=e.target.value; render(); };
+
 $("fQ").oninput=e=>{ S.fQ=e.target.value; render(); };
 $("mJenis").onchange=e=>{ S.mJenis=e.target.value; render(); };
 $("zt").addEventListener("change",e=>{ const cb=e.target.closest('input[type="checkbox"][data-f="ex"]'); if(!cb) return; e.stopPropagation();

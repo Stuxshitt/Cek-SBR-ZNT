@@ -1056,10 +1056,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <section class="panel" id="p_peta" role="tabpanel" hidden>
     <div class="toolbar">
       <div class="legend">
-        <span><i class="sw" style="background:var(--bad);opacity:.6"></i>SBR gagal</span>
-        <span><i class="sw" style="background:var(--ok);opacity:.5"></i>SBR lolos</span>
-        <span><i class="sw" style="background:var(--zero);opacity:.5"></i>1 titik</span>
-        <span><i class="sw" style="background:rgba(31,95,209,.08);border:2px solid #1F5FD1"></i>belum ada titik</span>
+        <span><i class="sw" style="background:color-mix(in srgb,var(--bad) 60%,transparent);border:2px solid #6E140C"></i>SBR gagal</span>
+        <span><i class="sw" style="background:color-mix(in srgb,var(--ok) 50%,transparent);border:2px solid #0B3D24"></i>SBR lolos</span>
+        <span><i class="sw" style="background:color-mix(in srgb,var(--zero) 50%,transparent);border:2px solid #2C3531"></i>1 titik</span>
+        <span><i class="sw" style="background:rgba(31,95,209,.10);border:2px solid #1A4DB3"></i>belum ada titik</span>
         <span><i class="dot" style="background:var(--bad)"></i>titik bikin SBR lewat</span>
         <span><i class="dot" style="background:var(--warn)"></i>data gak lengkap</span>
         <span><i class="dot" style="background:var(--ink)"></i>titik normal</span>
@@ -1071,7 +1071,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <label class="chk"><input type="checkbox" id="bKc" checked> Batas kecamatan</label>
       <label class="chk"><input type="checkbox" id="bKl" checked> Nama kecamatan</label>
       <label class="rng" for="bW">Tebal batas <input type="range" id="bW" min="1" max="10" step="0.5" value="3"><span id="bWv" class="mono">3 px</span></label></span>
-      <label class="rng" for="zW">Garis zona <input type="range" id="zW" min="0.5" max="5" step="0.5" value="1.5"><span id="zWv" class="mono">1,5 px</span></label>
+      <label class="rng" for="zW">Garis zona <input type="range" id="zW" min="1" max="6" step="0.5" value="2.5"><span id="zWv" class="mono">2,5 px</span></label>
       <span class="grp"><label class="chk"><input type="checkbox" id="psOn" checked> Persil</label>
       <label class="rng" for="opP">Opasitas persil <input type="range" id="opP" min="0" max="100" step="5" value="100"><span id="opPv" class="mono">100%</span></label></span>
       <label class="rng" for="opZ">Opasitas zona <input type="range" id="opZ" min="0" max="100" step="5" value="100"><span id="opZv" class="mono">100%</span></label>
@@ -1912,6 +1912,7 @@ function probsTsv(){
 }
 
 /* ---------- peta ---------- */
+const zCase=new Map();
 let BASE=null, MAP=null, ZL=null, PL=null, zPolys=new Map(), mapSrc=null, mapFitted=false;
 const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 let LLC=null, LLsrc=null;
@@ -1969,10 +1970,12 @@ function ensureMap(){
 function buildZones(){
   const src = S.zone ? S.zone : "seed";
   if(mapSrc===src && zPolys.size) return;
-  ZL.clearLayers(); zPolys.clear();
-  for(const g of geomList()){
-    if(!g.parts.length) continue;
-    const p=L.polygon(g.parts.map(part=>part.map(llr)), {weight:.6});
+  ZL.clearLayers(); zPolys.clear(); zCase.clear();
+  const GL=geomList().filter(g=>g.parts.length).map(g=>({g, ll:g.parts.map(part=>part.map(llr))}));
+  for(const {g,ll} of GL){   // garis putih di bawah (casing) biar batas antar zona tetap kebaca di peta jalan maupun citra
+    const c=L.polygon(ll,{color:"#ffffff", weight:4, opacity:0, fill:false, interactive:false, lineJoin:"round"}); zCase.set(String(g.id), c); ZL.addLayer(c); }
+  for(const {g,ll} of GL){
+    const p=L.polygon(ll, {weight:.6, lineJoin:"round"});
     p.on("click", e=>{ L.DomEvent.stopPropagation(e); if(persilClick(e.latlng, String(g.id))) return; zonePopup(String(g.id), e.latlng); });
     zPolys.set(String(g.id), p); ZL.addLayer(p);
   }
@@ -2008,12 +2011,12 @@ function renderMap(R){
   for(const [id,p] of zPolys){
     const z0=R.zById.get(id), z = z0 && svOk(z0) ? z0 : null;
     const zw=+$("zW").value;
-    if(z0 && !z) p._bs = {color:"#8C9792", weight:.6, opacity:.7, fillColor:"#8C9792", fillOpacity:0};   // zona bersampel yang gak masuk filter
-    else if(!z) p._bs = showEmpty && kecPass(zoneGeoKec(id,p)) ?{color:"#1F5FD1", weight:zw, opacity:1, fillColor:"#1F5FD1", fillOpacity:.06}:{opacity:0, fillOpacity:0};
+    if(z0 && !z) p._bs = {color:"#8C9792", weight:.6, opacity:.7, fillColor:"#8C9792", fillOpacity:0, cs:0};   // zona bersampel yang gak masuk filter
+    else if(!z) p._bs = showEmpty && kecPass(zoneGeoKec(id,p)) ?{color:"#1A4DB3", weight:zw, opacity:1, fillColor:"#1F5FD1", fillOpacity:.08, cs:1}:{opacity:0, fillOpacity:0, cs:0};
     else { const col = z.sbrState==="gagal"?C.bad : z.sbrState==="lolos"?C.ok : C.zero;
-      const stroke = z.sbrState==="gagal"?"#8E1F16" : z.sbrState==="lolos"?"#0F5A35" : "#3E4A45";
-      p._bs = {color:stroke, weight:zw, opacity:1, fillColor:col, fillOpacity: z.sbrState==="gagal"?.45:.32}; }
-    p.setStyle(zStyle(p._bs));
+      const stroke = z.sbrState==="gagal"?"#6E140C" : z.sbrState==="lolos"?"#0B3D24" : "#2C3531";
+      p._bs = {color:stroke, weight:zw, opacity:1, fillColor:col, fillOpacity: z.sbrState==="gagal"?.45:.32, cs:1}; }
+    p.setStyle(zStyle(p._bs)); applyCase(id,p);
   }
   PL.clearLayers();
   if($("mPts").checked){
@@ -2170,8 +2173,9 @@ function gpsStart(){
   else { try{ navigator.geolocation.getCurrentPosition(gpsShow,gpsErr,opt); }catch(e){ gpsErr(null); } }
 }
 function opZ(){ const v=+$("opZ").value; return isFinite(v)? v/100 : 1; }
+function applyCase(id,p){ const c=zCase.get(id); if(!c||!p._bs) return; const f=opZ(); c.setStyle({weight:(p._bs.weight||0)+2.5, opacity:p._bs.cs? .95*Math.max(f,0.6) : 0}); }
 function zStyle(bs){ const f=opZ(); return {...bs, fillOpacity:(bs.fillOpacity||0)*f, opacity:(bs.opacity||0)*Math.max(f,0.6)}; }
-function applyZoneOpacity(){ $("opZv").textContent=$("opZ").value+"%"; for(const p of zPolys.values()) if(p._bs) p.setStyle(zStyle(p._bs)); }
+function applyZoneOpacity(){ $("opZv").textContent=$("opZ").value+"%"; for(const [id,p] of zPolys) if(p._bs){ p.setStyle(zStyle(p._bs)); applyCase(id,p); } }
 function applyBaseOpacity(){ $("opBv").textContent=$("opB").value+"%"; if(!BASE) return; const v=+$("opB").value/100; if(BASE.setOpacity) BASE.setOpacity(v); else if(BASE.eachLayer) BASE.eachLayer(t=>t.setOpacity&&t.setOpacity(v)); }
 function goMap(id){
   S.tab="peta"; saveUI(); render();
@@ -2222,7 +2226,7 @@ $("gpsFollow").addEventListener("change", ()=>{ if($("gpsFollow").checked) gpsSt
 $("gpsInfo").addEventListener("click", e=>{ if(e.target.closest("[data-gpsx]")){ $("gpsInfo").hidden=true; return; }
   const g=e.target.closest("[data-goto]"); if(g){ const id=g.dataset.goto; gpsStop(); $("gpsFollow").checked=false; S.tab="zona"; S.fQ=id; $("fQ").value=id; S.fStatus="all"; S.fN="all"; S.open.add(id); saveUI(); render(); return; }
   const z=e.target.closest("[data-gpszoom]"); if(z){ const p=zPolys.get(z.dataset.gpszoom); if(p){ const b=p.getBounds(); if(GPS.last) b.extend([GPS.last.lat,GPS.last.lng]); MAP.fitBounds(b.pad(0.3)); p.openPopup ? zonePopup(z.dataset.gpszoom, p.getBounds().getCenter()) : 0; } } });
-$("zW").addEventListener("input", ()=>{ $("zWv").textContent=String($("zW").value).replace(".",",")+" px"; const w=+$("zW").value; for(const p of zPolys.values()) if(p._bs && p._bs.weight){ p._bs.weight=w; p.setStyle(zStyle(p._bs)); } });
+$("zW").addEventListener("input", ()=>{ $("zWv").textContent=String($("zW").value).replace(".",",")+" px"; const w=+$("zW").value; for(const [id,p] of zPolys) if(p._bs && p._bs.cs){ p._bs.weight=w; p.setStyle(zStyle(p._bs)); applyCase(id,p); } });
 $("bW").addEventListener("input", applyBatas); for(const id of ["bJt","bKc","bKl"]) $(id).addEventListener("change", applyBatas);
 $("opB").addEventListener("input", applyBaseOpacity);
 $("mBase").onchange=()=>{ if(!MAP||!BASE) return; if($("mBase").checked) BASE.addTo(MAP); else { MAP.removeLayer(BASE); $("osmNote").hidden=true; } };

@@ -1,6 +1,6 @@
 // Service worker Cek SBR: halaman utama ambil versi terbaru dulu (fallback ke cache kalau offline),
 // library dari CDN dan font disimpan di cache. Data upload gak pernah lewat sini.
-const VER = "cek-sbr-v1";
+const VER = "cek-sbr-v2";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 const LIBS = [
   "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",

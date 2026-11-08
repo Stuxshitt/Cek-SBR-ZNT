@@ -229,6 +229,16 @@ details.opt>summary{cursor:pointer;font-weight:600}
 .mapwrap{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--soft)}
 .osmnote{position:absolute;left:10px;right:10px;bottom:10px;z-index:500;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:8px;padding:8px 12px;font-size:.82rem;line-height:1.4;max-width:560px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .leaflet-control-attribution{font-size:10px}
+.panel>.mapwrap.mapwrap{position:relative}
+.leaflet-control-layers-toggle.leaflet-control-layers-toggle{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 8l10 5 10-5-10-5Z' fill='%231F7A4D'/%3E%3Cpath d='m2 12 10 5 10-5M2 16l10 5 10-5' fill='none' stroke='%2315211D' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E");background-size:24px 24px;background-repeat:no-repeat;background-position:center;width:36px;height:36px}
+.gpsbtn{display:inline-flex;align-items:center;gap:6px;color:#1F5FD1;border-color:#1F5FD1}
+.gpsbtn.on{background:#1F5FD1;color:#fff}
+.gpsinfo{position:absolute;left:58px;right:58px;top:10px;margin:0 auto;z-index:600;max-width:440px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:4px solid #1F5FD1;border-radius:8px;padding:8px 12px;font-size:.84rem;line-height:1.45;box-shadow:0 2px 10px rgba(0,0,0,.14)}
+.gpsinfo b{font-family:var(--f-mono)}
+.gpsinfo .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.gpsinfo button{font:inherit;font-size:.78rem;padding:3px 8px;border-radius:6px;border:1px solid var(--line);background:var(--soft);color:var(--ink);cursor:pointer}
+.gpsinfo .x{position:absolute;right:6px;top:4px;border:0;background:transparent;font-size:1rem;color:var(--muted)}
+@media (max-width:760px){.gpsinfo{left:10px;right:10px;top:auto;bottom:22px;max-width:none}.osmnote{top:10px;bottom:auto;left:50px;right:56px}}
 .grp{display:inline-flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
 .leaflet-tooltip.kclab{background:transparent;border:0;box-shadow:none;color:var(--ink);font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 0 3px var(--surface),0 0 3px var(--surface),0 0 6px var(--surface);padding:0}
 .leaflet-tooltip.kclab::before{display:none}
@@ -1053,8 +1063,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <label class="chk"><input type="checkbox" id="mEmpty" checked> Zona tanpa titik</label>
       <button class="btn" id="mFail">Zoom ke zona gagal</button>
       <button class="btn" id="mAll">Lihat semua</button>
+      <span class="grp"><button class="btn gpsbtn" id="gpsBtn" type="button"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2"/></svg> Lokasi saya</button>
+      <label class="chk"><input type="checkbox" id="gpsFollow"> Ikutin posisi</label></span>
     </div>
-    <div class="mapwrap"><div id="map" role="application" aria-label="Peta zona dan titik sampel"></div><div id="osmNote" class="osmnote" hidden>Peta dasar gak bisa dimuat di sini. Cek koneksi internet, peta jalan dan citra satelit butuh sinyal. Zona dan titik tetap jalan tanpa peta dasar.</div></div>
+    <div class="mapwrap"><div id="map" role="application" aria-label="Peta zona dan titik sampel"></div><div id="gpsInfo" class="gpsinfo" hidden aria-live="polite"></div><div id="osmNote" class="osmnote" hidden>Peta dasar gak bisa dimuat di sini. Cek koneksi internet, peta jalan dan citra satelit butuh sinyal. Zona dan titik tetap jalan tanpa peta dasar.</div></div>
     <p class="note">Klik zona atau titik buat lihat detailnya. Peta dasar bisa pilih peta jalan atau citra satelit (dua-duanya dari Esri) di pojok kanan atas peta, butuh internet. Kalau layer zona belum diupload, batas zona pakai versi bawaan yang udah disederhanain (toleransi 1 m).</p>
   </section>
 
@@ -1888,7 +1900,7 @@ function ensureMap(){
   }
   BASE=BASES["Peta jalan"];
   if($("mBase").checked) BASE.addTo(MAP);
-  L.control.layers(BASES,null,{collapsed:false, position:"topright"}).addTo(MAP);
+  L.control.layers(BASES,null,{collapsed: window.matchMedia("(max-width:760px)").matches, position:"topright"}).addTo(MAP);
   MAP.on("baselayerchange",e=>{ BASE=e.layer; $("mBase").checked=true; applyBaseOpacity(); });
   applyBaseOpacity();
   L.control.scale({imperial:false}).addTo(MAP);
@@ -1967,6 +1979,60 @@ function applyBatas(){
   set(BK,w,null); set(BJ,w*1.6+1,null);
   for(const [cb,lay] of [["bKc",BK],["bJt",BJ],["bKl",BL]]){ if($(cb).checked){ if(!MAP.hasLayer(lay)) lay.addTo(MAP); } else if(MAP.hasLayer(lay)) MAP.removeLayer(lay); }
 }
+/* ---------- GPS: posisi surveyor, cuma tampil di HP ini, gak disimpan/dikirim ---------- */
+let GPS={watch:null, mk:null, acc:null, last:null, fit:true};
+function zoneSrc(){ return S.zone ? S.zone : (ZGEOM ? seedZone() : null); }
+function toZoneXY(lat,lng){ const z=zoneSrc(); if(!z) return null;
+  const bb=z.bbox, deg=Math.abs(bb[0])<=180 && Math.abs(bb[2])<=180;
+  if(deg) return [lng,lat];
+  try{ return proj4("EPSG:4326", z.prj||TM3_482).forward([lng,lat]); }catch(e){ try{ return proj4("EPSG:4326",TM3_482).forward([lng,lat]); }catch(_){ return null; } } }
+function zoneAt(x,y){ const z=zoneSrc(); if(!z) return null; for(const zo of z.zones){ const b=zo.bbox; if(x<b[0]||x>b[2]||y<b[1]||y>b[3]) continue; if(inRings(x,y,zo.rings)) return zo; } return null; }
+function nearestEmpty(x,y,R){ const z=zoneSrc(); if(!z) return null; const deg=Math.abs(z.bbox[0])<=180; const k=deg?111320:1; let best=null;
+  for(const zo of z.zones){ const id=String(zo.id); const zr=R&&R.zById.get(id); if(zr && zr.n>0) continue;
+    const b=zo.bbox; const dx=Math.max(b[0]-x,0,x-b[2]), dy=Math.max(b[1]-y,0,y-b[3]); const lb=Math.hypot(dx,dy)*k; if(best && lb>=best.d) continue;
+    let d=Infinity; for(const r of zo.rings) for(let i=0;i<r.length;i+=2){ const dd=Math.hypot(r[i]-x,r[i+1]-y)*k; if(dd<d) d=dd; }
+    if(inRings(x,y,zo.rings)) d=0; if(!best||d<best.d) best={id, d}; }
+  return best; }
+function fmtM(m){ return m<1000? Math.round(m)+" m" : (m/1000).toLocaleString("id-ID",{maximumFractionDigits:1})+" km"; }
+function gpsMsg(html){ const el=$("gpsInfo"); el.innerHTML='<button class="x" type="button" data-gpsx aria-label="Tutup">×</button>'+html; el.hidden=false; }
+function gpsOn(on){ $("gpsBtn").classList.toggle("on",on); }
+function gpsStop(){ if(GPS.watch!=null){ try{ navigator.geolocation.clearWatch(GPS.watch); }catch(_){} GPS.watch=null; } gpsOn(false); }
+function gpsShow(pos){
+  if(!MAP) return; const lat=pos.coords.latitude, lng=pos.coords.longitude, acc=pos.coords.accuracy||0; GPS.last={lat,lng,acc};
+  const ll=[lat,lng];
+  if(!GPS.mk){ GPS.acc=L.circle(ll,{radius:acc,color:"#1F5FD1",weight:1,fillColor:"#1F5FD1",fillOpacity:.12,interactive:false}).addTo(MAP);
+               GPS.mk=L.circleMarker(ll,{radius:8,color:"#fff",weight:3,fillColor:"#1F5FD1",fillOpacity:1}).addTo(MAP); }
+  else { GPS.mk.setLatLng(ll); GPS.acc.setLatLng(ll).setRadius(acc); }
+  GPS.mk.bringToFront();
+  if(GPS.fit){ MAP.setView(ll, Math.max(MAP.getZoom(),17)); GPS.fit=false; } else if($("gpsFollow").checked) MAP.panTo(ll);
+  const q=toZoneXY(lat,lng); const zo=q&&zoneAt(q[0],q[1]); const R=last;
+  let h=`<div><b>±${Math.round(acc)} m</b> · ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>`;
+  if(!zoneSrc()) h+=`<div class="row">Upload zip zona dulu biar ketahuan lagi di zona mana.</div>`;
+  else if(!zo) h+=`<div class="row">Lagi di luar zona (jalan, badan air, atau di luar Jaktim).</div>`;
+  else { const zr=R&&R.zById.get(String(zo.id));
+    const st = !zr||!zr.n? "belum ada titik" : zr.sbrState==="gagal"? "SBR gagal" : zr.sbrState==="lolos"? "SBR lolos" : "1 titik";
+    h+=`<div class="row"><span>Lagi di <b>zona ${esc(zo.id)}</b> · ${st}${zr&&zr.n?` · ${zr.n}/${zr.req} titik`:""}${zr&&isFinite(zr.sbr)?` · SBR ${pct(zr.sbr)}`:""}</span><button type="button" data-goto="${esc(zo.id)}">Buka zona</button></div>`; }
+  if(acc>30) h+=`<div class="row" style="color:var(--warn)">Akurasi GPS lagi jelek, posisi bisa meleset ke zona sebelah.</div>`;
+  const ne = q && nearestEmpty(q[0],q[1],R);
+  if(ne && (!zo || String(zo.id)!==ne.id)) h+=`<div class="row"><span>Zona belum ada titik terdekat: <b>${esc(ne.id)}</b> (${fmtM(ne.d)})</span><button type="button" data-gpszoom="${esc(ne.id)}">Lihat</button></div>`;
+  gpsMsg(h);
+}
+function gpsErr(e){
+  gpsStop();
+  const m = !window.isSecureContext ? "GPS gak bisa dipakai di halaman ini. Pakai versi aplikasi (link GitHub Pages)."
+    : e && e.code===1 ? "Izin lokasi ditolak. Buka pengaturan situs di Chrome/Safari, izinkan Lokasi, lalu coba lagi."
+    : e && e.code===3 ? "GPS kelamaan nyari sinyal. Coba di tempat yang lebih terbuka, lalu ketuk Lokasi saya lagi."
+    : "Lokasi gak kebaca. Pastikan GPS/lokasi HP nyala.";
+  gpsMsg(`<div>${m}</div>`);
+}
+function gpsStart(){
+  if(!MAP){ S.tab="peta"; saveUI(); render(); }
+  if(!("geolocation" in navigator)){ gpsErr(null); return; }
+  GPS.fit=true; gpsMsg("<div>Lagi nyari posisi GPS…</div>");
+  const opt={enableHighAccuracy:true, timeout:20000, maximumAge:5000};
+  if($("gpsFollow").checked){ gpsStop(); gpsOn(true); try{ GPS.watch=navigator.geolocation.watchPosition(gpsShow,gpsErr,opt); }catch(e){ gpsErr(null); } }
+  else { try{ navigator.geolocation.getCurrentPosition(gpsShow,gpsErr,opt); }catch(e){ gpsErr(null); } }
+}
 function opZ(){ const v=+$("opZ").value; return isFinite(v)? v/100 : 1; }
 function zStyle(bs){ const f=opZ(); return {...bs, fillOpacity:(bs.fillOpacity||0)*f, opacity:(bs.opacity||0)*Math.max(f,0.6)}; }
 function applyZoneOpacity(){ $("opZv").textContent=$("opZ").value+"%"; for(const p of zPolys.values()) if(p._bs) p.setStyle(zStyle(p._bs)); }
@@ -2013,6 +2079,11 @@ $("zt").addEventListener("click",e=>{ const tr=e.target.closest("tr.z"); if(!tr)
 $("zt").addEventListener("click",e=>{ const b=e.target.closest("[data-map]"); if(b){ e.stopPropagation(); goMap(b.dataset.map); } }, true);
 $("mPts").onchange=()=>render(); $("mEmpty").onchange=()=>render();
 $("opZ").addEventListener("input", applyZoneOpacity);
+$("gpsBtn").addEventListener("click", gpsStart);
+$("gpsFollow").addEventListener("change", ()=>{ if($("gpsFollow").checked) gpsStart(); else gpsStop(); });
+$("gpsInfo").addEventListener("click", e=>{ if(e.target.closest("[data-gpsx]")){ $("gpsInfo").hidden=true; return; }
+  const g=e.target.closest("[data-goto]"); if(g){ const id=g.dataset.goto; gpsStop(); $("gpsFollow").checked=false; S.tab="zona"; S.fQ=id; $("fQ").value=id; S.fStatus="all"; S.fN="all"; S.open.add(id); saveUI(); render(); return; }
+  const z=e.target.closest("[data-gpszoom]"); if(z){ const p=zPolys.get(z.dataset.gpszoom); if(p){ const b=p.getBounds(); if(GPS.last) b.extend([GPS.last.lat,GPS.last.lng]); MAP.fitBounds(b.pad(0.3)); p.openPopup ? zonePopup(z.dataset.gpszoom, p.getBounds().getCenter()) : 0; } } });
 $("zW").addEventListener("input", ()=>{ $("zWv").textContent=String($("zW").value).replace(".",",")+" px"; const w=+$("zW").value; for(const p of zPolys.values()) if(p._bs && p._bs.weight){ p._bs.weight=w; p.setStyle(zStyle(p._bs)); } });
 $("bW").addEventListener("input", applyBatas); for(const id of ["bJt","bKc","bKl"]) $(id).addEventListener("change", applyBatas);
 $("opB").addEventListener("input", applyBaseOpacity);
@@ -2087,7 +2158,6 @@ function labelTables(){
   sync();
 })();
 </script>
-
 <script>
 if("serviceWorker" in navigator){ window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
 </script>

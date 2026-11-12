@@ -247,6 +247,7 @@ details.opt>summary{cursor:pointer;font-weight:600}
 .ms-list input{width:18px;height:18px;accent-color:var(--ok)}
 .gpsbtn{display:inline-flex;align-items:center;gap:6px;color:#1F5FD1;border-color:#1F5FD1}
 .gpsbtn.on{background:#1F5FD1;color:#fff}
+.zpbtn{padding:3px 8px;font-size:.78rem;white-space:nowrap;color:#C2410C;border-color:#C2410C}.zpbtn:disabled{opacity:.4}
 .measbtn{display:inline-flex;align-items:center;gap:6px;color:#C2410C;border-color:#C2410C}.measbtn.on{background:#C2410C;color:#fff}
 .measbox{position:absolute;right:10px;bottom:28px;z-index:610;width:250px;max-height:60%;overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:4px solid #C2410C;border-radius:8px;padding:8px 10px;font-size:.82rem;line-height:1.4;box-shadow:0 2px 10px rgba(0,0,0,.18)}
 .measbox .mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -1835,8 +1836,8 @@ function renderZones(rows){
     if(open){
       const zid=esc(z.id);
       det=`<tr class="det"><td colspan="9"><div class="zcard"><div class="zc-head"><div class="zc-in"><div class="zc-title"><span class="eyebrow">Rincian zona</span><b>${zid}</b><span class="sub">${esc(z.kec)} · ${esc(z.kel)}</span><span class="kpi">SBR ${z.n>1?pct(z.sbr):"-"}</span><span class="kpi">${z.n} / ${z.req} titik</span><span class="kpi">${rp(z.mean)}/m²</span></div><div class="zc-act"><button class="mbtn" data-map="${zid}">Lihat di peta</button><button class="zclose" data-zclose="${zid}" aria-label="Tutup rincian zona ${zid}">Tutup ✕</button></div></div></div>
-      <div class="zc-body">${anaHtml(z)}<div class="sec sec-pts"><div class="sec-h"><h3>Semua titik di zona ini</h3><span class="muted" style="font-size:.78rem">${z.ss.length} titik · merah = bikin SBR lewat</span></div><div class="inner"><table><thead><tr><th>No.</th><th>No. ID</th><th>Surveyor</th><th>Tgl</th><th>Jenis data</th><th>Hak</th><th class="n">Harga</th><th class="n">LT</th><th class="n">LB</th><th>Penyusutan</th><th class="n">Nilai bangunan</th><th class="n">Nilai tanah /m²</th><th class="n">Deviasi</th><th class="n">SBR tanpa titik ini</th><th>Masalah</th></tr></thead><tbody>${
-        z.ss.slice().sort((a,b)=>(b.ok-a.ok)||Math.abs(b.dev||0)-Math.abs(a.dev||0)).map(s=>`<tr class="${s.prob==="sbr"?"prob":""}${S.hl===s.i?" hl":""}"><td class="mono">${esc(s.no)}</td>${idCell(s)}<td>${esc(s.sv)}</td><td class="mono">${dmy(s.tgl)}</td><td>${esc(s.jenis)}</td><td>${esc(s.hak)}</td><td class="n">${rp(s.H)}</td><td class="n">${isFinite(s.LT)?fmt(s.LT):"-"}</td><td class="n">${s.LB?fmt(s.LB):"-"}</td><td class="mono" style="font-size:.76rem;white-space:nowrap">${s.LB?`${isFinite(s.umur)?s.umur+" th":"? th"} · ${s.kode||"-"} · ${esc(s.tabel)} → ${isFinite(s.depPct)?s.depPct+"%":"#N/A"}`:"tanah kosong"}</td><td class="n">${s.LB?rp(s.NB):"-"}</td><td class="n"><b>${s.ok?rp(s.nt):"-"}</b></td><td class="n dev${Math.abs(s.dev||0)>P.thr?" hi":""}">${isFinite(s.dev)?sdev(s.dev):"-"}</td><td class="n">${isFinite(s.sbrWo)?pct(s.sbrWo):"-"}</td><td>${s.why.map(w=>`<div class="why${s.prob==="data"?" w":""}">${esc(w)}</div>`).join("")||'<span class="muted">-</span>'}</td></tr>`).join("")
+      <div class="zc-body">${anaHtml(z)}<div class="sec sec-pts"><div class="sec-h"><h3>Semua titik di zona ini</h3><span class="muted" style="font-size:.78rem">${z.ss.length} titik · merah = bikin SBR lewat</span></div><div class="inner"><table><thead><tr><th>No.</th><th>No. ID</th><th>Surveyor</th><th>Tgl</th><th>Jenis data</th><th>Hak</th><th class="n">Harga</th><th class="n">LT</th><th class="n">LB</th><th>Penyusutan</th><th class="n">Nilai bangunan</th><th class="n">Nilai tanah /m²</th><th class="n">Deviasi</th><th class="n">SBR tanpa titik ini</th><th>Masalah</th><th>Peta</th></tr></thead><tbody>${
+        z.ss.slice().sort((a,b)=>(b.ok-a.ok)||Math.abs(b.dev||0)-Math.abs(a.dev||0)).map(s=>`<tr class="${s.prob==="sbr"?"prob":""}${S.hl===s.i?" hl":""}"><td class="mono">${esc(s.no)}</td>${idCell(s)}<td>${esc(s.sv)}</td><td class="mono">${dmy(s.tgl)}</td><td>${esc(s.jenis)}</td><td>${esc(s.hak)}</td><td class="n">${rp(s.H)}</td><td class="n">${isFinite(s.LT)?fmt(s.LT):"-"}</td><td class="n">${s.LB?fmt(s.LB):"-"}</td><td class="mono" style="font-size:.76rem;white-space:nowrap">${s.LB?`${isFinite(s.umur)?s.umur+" th":"? th"} · ${s.kode||"-"} · ${esc(s.tabel)} → ${isFinite(s.depPct)?s.depPct+"%":"#N/A"}`:"tanah kosong"}</td><td class="n">${s.LB?rp(s.NB):"-"}</td><td class="n"><b>${s.ok?rp(s.nt):"-"}</b></td><td class="n dev${Math.abs(s.dev||0)>P.thr?" hi":""}">${isFinite(s.dev)?sdev(s.dev):"-"}</td><td class="n">${isFinite(s.sbrWo)?pct(s.sbrWo):"-"}</td><td>${s.why.map(w=>`<div class="why${s.prob==="data"?" w":""}">${esc(w)}</div>`).join("")||'<span class="muted">-</span>'}</td><td><button type="button" class="btn zpbtn" data-gopt="${s.i}"${S.xy[s.i]?"":" disabled title=\"Koordinat titik gak kebaca\""}>📍 Lihat</button></td></tr>`).join("")
       }</tbody></table></div></div></div><div class="zc-foot"><button class="zclose" data-zclose="${zid}">▲ Tutup zona ${zid}</button></div></div></td></tr>`;
     }
     return `<tr class="z s-${z.sbrState}${open?" open":""}" data-z="${esc(z.id)}"><td class="zn"><span class="car">›</span> ${esc(z.id)}</td><td>${esc(z.kec)}<div class="muted" style="font-size:.8rem">${esc(z.kel)}</div></td><td class="n">${isFinite(z.area)?(z.area/1e4).toLocaleString("id-ID",{maximumFractionDigits:1})+" Ha":"-"}</td><td class="n">${z.n} / ${z.req}${z.bad?`<div class="muted" style="font-size:.75rem">+${z.bad} gak kepakai</div>`:""}</td><td class="n"><b>${rp(z.mean)}</b></td><td class="n">${z.n>1?`${rp(mn)} – ${rp(mx)}`:"-"}</td><td>${sbrCell(z)}</td><td><div class="stk">${pills}</div></td><td>${tags||'<span class="muted">-</span>'}</td></tr>${det}`;
@@ -2036,13 +2037,13 @@ function renderMap(R){
       p._bs = {color:stroke, weight:zw, opacity:1, fillColor:col, fillOpacity: z.sbrState==="gagal"?.45:.32, cs:1}; }
     p.setStyle(zStyle(p._bs)); applyCase(id,p);
   }
-  PL.clearLayers();
+  PL.clearLayers(); PMK.clear();
   if($("mPts").checked){
     const pts=[...R.samples].sort((a,b)=>(a.prob?1:0)-(b.prob?1:0));
     for(const s of pts){ if(!ptOk(s)) continue; const q=S.xy[s.i]; if(!q) continue;
       const fc = (s.prob==="sbr"||s.prob==="div")?C.bad : s.prob==="indkos"?C.zero : s.prob?C.warn : C.ink;
       const m=L.circleMarker(llConv()(q[0],q[1]),{radius: s.prob?5.5:3.5, color:C.surf, weight:1.2, fillColor:fc, fillOpacity:1});
-      m.bindPopup(()=>pointHtml(s)); m.on("click",e=>{ if(MEAS.on){ L.DomEvent.stopPropagation(e); m.closePopup(); measAdd(e.latlng); } }); PL.addLayer(m); }
+      PMK.set(s.i,m); m.bindPopup(()=>pointHtml(s)); m.on("click",e=>{ if(MEAS.on){ L.DomEvent.stopPropagation(e); m.closePopup(); measAdd(e.latlng); } }); PL.addLayer(m); }
   }
   setTimeout(()=>{ MAP.invalidateSize(); if(!mapFitted && ZL.getLayers().length){ const withS=R.zones.filter(svOk).map(z=>zPolys.get(String(z.id))).filter(Boolean); const fg=L.featureGroup(withS.length?withS:ZL.getLayers()); MAP.fitBounds(fg.getBounds().pad(0.15)); mapFitted=true; } },0);
 }
@@ -2240,6 +2241,23 @@ $("opZ").addEventListener("input", applyZoneOpacity);
 $("psOn").addEventListener("change", ()=>{ if(!MAP||!PS.layer) return; if($("psOn").checked) PS.layer.addTo(MAP); else { MAP.removeLayer(PS.layer); if(PS.sel){ MAP.removeLayer(PS.sel); PS.sel=null; } } psHint(); });
 $("opP").addEventListener("input", ()=>{ $("opPv").textContent=$("opP").value+"%"; if(PS.layer) PS.layer.setOpacity(+$("opP").value/100); });
 $("gpsBtn").addEventListener("click", gpsStart);
+/* ===== Zoom ke titik dari tab Zona ===== */
+const PMK=new Map();
+function goPoint(i){
+  const q=S.xy[i]; if(!q) return;
+  S.tab="peta"; mapFitted=true; saveUI(); render();
+  setTimeout(()=>{
+    if(!MAP) return; MAP.invalidateSize();
+    const ll=llConv()(q[0],q[1]);
+    const mw=document.querySelector(".mapwrap"); if(mw) mw.scrollIntoView({block:"start", behavior:"smooth"});
+    MAP.setView(ll,19,{animate:false});
+    const ring=L.circleMarker(ll,{radius:18, color:"#C2410C", weight:3, fill:false, interactive:false}).addTo(MAP);
+    setTimeout(()=>MAP.removeLayer(ring),6000);
+    const m=PMK.get(i);
+    if(m) m.openPopup(); else L.popup().setLatLng(ll).setContent("Titik ini lagi disembunyiin filter atau layer Titik sampel lagi dimatiin.").openOn(MAP);
+  },250);
+}
+$("zt").addEventListener("click",e=>{ const b=e.target.closest("[data-gopt]"); if(!b) return; e.stopPropagation(); e.preventDefault(); goPoint(+b.dataset.gopt); }, true);
 /* ===== Ukur jarak & luas ===== */
 const MEAS={on:false, mode:"jarak", pts:[], shape:null, lab:null, vtx:null};
 function measXY(ll){ try{ return proj4("EPSG:4326",TM3_482).forward([ll.lng,ll.lat]); }catch(e){ return null; } }

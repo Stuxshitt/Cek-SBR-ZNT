@@ -247,6 +247,22 @@ details.opt>summary{cursor:pointer;font-weight:600}
 .ms-list input{width:18px;height:18px;accent-color:var(--ok)}
 .gpsbtn{display:inline-flex;align-items:center;gap:6px;color:#1F5FD1;border-color:#1F5FD1}
 .gpsbtn.on{background:#1F5FD1;color:#fff}
+.measbtn{display:inline-flex;align-items:center;gap:6px;color:#C2410C;border-color:#C2410C}.measbtn.on{background:#C2410C;color:#fff}
+.measbox{position:absolute;right:10px;bottom:28px;z-index:610;width:250px;max-height:60%;overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:4px solid #C2410C;border-radius:8px;padding:8px 10px;font-size:.82rem;line-height:1.4;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.measbox .mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.measbox .mseg{display:inline-flex;border:1px solid #C2410C;border-radius:6px;overflow:hidden}
+.measbox .mseg button{border:0;background:transparent;color:#C2410C;padding:4px 12px;font:inherit;font-weight:600;cursor:pointer}
+.measbox .mseg button.on{background:#C2410C;color:#fff}
+.measbox .mx{border:0;background:transparent;font-size:1.3rem;line-height:1;cursor:pointer;color:var(--ink);padding:0 4px}
+.measbox .mout table{width:100%;border-collapse:collapse}.measbox .mout td{padding:1px 0}.measbox .mout td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.measbox .mout .tot td{border-top:1px solid var(--line);font-weight:700;padding-top:3px}
+.measbox .mhint{color:var(--muted,#666);font-size:.78rem}
+.measbox .mbtns{display:flex;gap:6px;margin-top:8px}.measbox .mbtns .btn{flex:1;padding:4px 6px}
+.mvx{width:14px!important;height:14px!important;margin:-7px 0 0 -7px!important;border-radius:50%;background:#fff;border:3px solid #C2410C;box-sizing:border-box}
+.mlab{background:#C2410C;color:#fff;font:600 11px/1.2 system-ui,sans-serif;padding:2px 5px;border-radius:4px;white-space:nowrap;transform:translate(-50%,-50%);display:inline-block;box-shadow:0 1px 3px rgba(0,0,0,.3);pointer-events:none}
+.mlab.area{background:#fff;color:#C2410C;border:2px solid #C2410C;font-size:12px}
+.measuring .leaflet-container,.measuring #map{cursor:crosshair}
+@media (max-width:760px){.measbox{left:10px;right:10px;width:auto;bottom:22px;max-height:36%;font-size:.78rem;padding:6px 8px}.measbox .mout table+.mhint{display:none}.measbox .mbtns{margin-top:5px}}
 .gpsinfo{position:absolute;left:58px;right:58px;top:10px;margin:0 auto;z-index:600;max-width:440px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:4px solid #1F5FD1;border-radius:8px;padding:8px 12px;font-size:.84rem;line-height:1.45;box-shadow:0 2px 10px rgba(0,0,0,.14)}
 .gpsinfo b{font-family:var(--f-mono)}
 .gpsinfo .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px}
@@ -1082,8 +1098,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <button class="btn" id="mAll">Lihat semua</button>
       <span class="grp"><button class="btn gpsbtn" id="gpsBtn" type="button"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2"/></svg> Lokasi saya</button>
       <label class="chk"><input type="checkbox" id="gpsFollow"> Ikutin posisi</label></span>
+      <button class="btn measbtn" id="measBtn" type="button"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2" stroke="currentColor" stroke-width="2"/></svg> Ukur</button>
     </div>
-    <div class="mapwrap"><div id="map" role="application" aria-label="Peta zona dan titik sampel"></div><div id="gpsInfo" class="gpsinfo" hidden aria-live="polite"></div><div id="psHint" class="pshint" hidden></div><div id="osmNote" class="osmnote" hidden>Peta dasar gak bisa dimuat di sini. Cek koneksi internet, peta jalan dan citra satelit butuh sinyal. Zona dan titik tetap jalan tanpa peta dasar.</div></div>
+    <div class="mapwrap"><div id="map" role="application" aria-label="Peta zona dan titik sampel"></div><div id="gpsInfo" class="gpsinfo" hidden aria-live="polite"></div><div id="measBox" class="measbox" hidden aria-live="polite"><div class="mhead"><span class="mseg"><button type="button" id="measJ" class="on">Jarak</button><button type="button" id="measL">Luas</button></span><button type="button" class="mx" id="measX" aria-label="Tutup ukur">×</button></div><div id="measOut" class="mout"></div><div class="mbtns"><button type="button" class="btn" id="measU">Undo</button><button type="button" class="btn" id="measC">Hapus</button></div></div><div id="psHint" class="pshint" hidden></div><div id="osmNote" class="osmnote" hidden>Peta dasar gak bisa dimuat di sini. Cek koneksi internet, peta jalan dan citra satelit butuh sinyal. Zona dan titik tetap jalan tanpa peta dasar.</div></div>
     <p class="note">Klik zona atau titik buat lihat detailnya. Peta dasar bisa pilih peta jalan atau citra satelit (dua-duanya dari Esri) di pojok kanan atas peta, butuh internet. Kalau layer zona belum diupload, batas zona pakai versi bawaan yang udah disederhanain (toleransi 1 m).</p>
   </section>
 
@@ -1960,7 +1977,8 @@ function ensureMap(){
   MAP.createPane("persil"); MAP.getPane("persil").style.zIndex=420; MAP.getPane("persil").style.pointerEvents="none";
   PS.layer=new PersilLayer({pane:"persil", maxZoom:19, minZoom:10, keepBuffer:1, updateWhenIdle:true, opacity:+$("opP").value/100});
   if($("psOn").checked) PS.layer.addTo(MAP);
-  MAP.on("click", e=>{ persilClick(e.latlng, null); });
+  MAP.on("click", e=>{ if(MEAS.on){ measAdd(e.latlng); return; } persilClick(e.latlng, null); });
+  MEAS.shape=L.layerGroup().addTo(MAP); MEAS.lab=L.layerGroup().addTo(MAP); MEAS.vtx=L.layerGroup().addTo(MAP);
   MAP.on("zoomend", psHint);
   MAP.createPane("batas"); MAP.getPane("batas").style.zIndex=450; MAP.getPane("batas").style.pointerEvents="none";
   buildBatas();
@@ -1976,7 +1994,7 @@ function buildZones(){
     const c=L.polygon(ll,{color:"#ffffff", weight:4, opacity:0, fill:false, interactive:false, lineJoin:"round"}); zCase.set(String(g.id), c); ZL.addLayer(c); }
   for(const {g,ll} of GL){
     const p=L.polygon(ll, {weight:.6, lineJoin:"round"});
-    p.on("click", e=>{ L.DomEvent.stopPropagation(e); if(persilClick(e.latlng, String(g.id))) return; zonePopup(String(g.id), e.latlng); });
+    p.on("click", e=>{ L.DomEvent.stopPropagation(e); if(MEAS.on){ measAdd(e.latlng); return; } if(persilClick(e.latlng, String(g.id))) return; zonePopup(String(g.id), e.latlng); });
     zPolys.set(String(g.id), p); ZL.addLayer(p);
   }
   mapSrc=src; mapFitted=false; LLsrc=null;
@@ -2024,7 +2042,7 @@ function renderMap(R){
     for(const s of pts){ if(!ptOk(s)) continue; const q=S.xy[s.i]; if(!q) continue;
       const fc = (s.prob==="sbr"||s.prob==="div")?C.bad : s.prob==="indkos"?C.zero : s.prob?C.warn : C.ink;
       const m=L.circleMarker(llConv()(q[0],q[1]),{radius: s.prob?5.5:3.5, color:C.surf, weight:1.2, fillColor:fc, fillOpacity:1});
-      m.bindPopup(()=>pointHtml(s)); PL.addLayer(m); }
+      m.bindPopup(()=>pointHtml(s)); m.on("click",e=>{ if(MEAS.on){ L.DomEvent.stopPropagation(e); m.closePopup(); measAdd(e.latlng); } }); PL.addLayer(m); }
   }
   setTimeout(()=>{ MAP.invalidateSize(); if(!mapFitted && ZL.getLayers().length){ const withS=R.zones.filter(svOk).map(z=>zPolys.get(String(z.id))).filter(Boolean); const fg=L.featureGroup(withS.length?withS:ZL.getLayers()); MAP.fitBounds(fg.getBounds().pad(0.15)); mapFitted=true; } },0);
 }
@@ -2222,6 +2240,66 @@ $("opZ").addEventListener("input", applyZoneOpacity);
 $("psOn").addEventListener("change", ()=>{ if(!MAP||!PS.layer) return; if($("psOn").checked) PS.layer.addTo(MAP); else { MAP.removeLayer(PS.layer); if(PS.sel){ MAP.removeLayer(PS.sel); PS.sel=null; } } psHint(); });
 $("opP").addEventListener("input", ()=>{ $("opPv").textContent=$("opP").value+"%"; if(PS.layer) PS.layer.setOpacity(+$("opP").value/100); });
 $("gpsBtn").addEventListener("click", gpsStart);
+/* ===== Ukur jarak & luas ===== */
+const MEAS={on:false, mode:"jarak", pts:[], shape:null, lab:null, vtx:null};
+function measXY(ll){ try{ return proj4("EPSG:4326",TM3_482).forward([ll.lng,ll.lat]); }catch(e){ return null; } }
+function measLen(a,b){ const p=measXY(a), q=measXY(b); return (p&&q) ? Math.hypot(p[0]-q[0],p[1]-q[1]) : MAP.distance(a,b); }
+function measArea(P){ const xy=P.map(measXY); if(xy.some(x=>!x)) return null; let s=0; for(let i=0;i<xy.length;i++){ const a=xy[i], b=xy[(i+1)%xy.length]; s+=a[0]*b[1]-b[0]*a[1]; } return Math.abs(s)/2; }
+function measFm(n,d){ return n.toLocaleString("id-ID",{minimumFractionDigits:d, maximumFractionDigits:d}); }
+function measM(n){ return n>=1000 ? measFm(n/1000,2)+" km" : measFm(n, n<100?2:1)+" m"; }
+function measA(n){ return measFm(n, n<100?2:0)+" m²" + (n>=10000 ? " ("+measFm(n/10000,2)+" ha)" : ""); }
+function measLabel(ll, txt, cls){ return L.marker(ll,{interactive:false, keyboard:false, icon:L.divIcon({className:"", html:'<span class="mlab'+(cls?" "+cls:"")+'">'+txt+'</span>', iconSize:[0,0]})}); }
+function measSegs(){ const P=MEAS.pts, out=[]; for(let i=0;i<P.length-1;i++) out.push([P[i],P[i+1]]); if(MEAS.mode==="luas" && P.length>=3) out.push([P[P.length-1],P[0]]); return out; }
+function measShape(){
+  MEAS.shape.clearLayers(); MEAS.lab.clearLayers();
+  const P=MEAS.pts; if(!P.length) return;
+  const st={color:"#C2410C", weight:3, interactive:false};
+  if(MEAS.mode==="luas" && P.length>=3) MEAS.shape.addLayer(L.polygon(P,{...st, fillColor:"#C2410C", fillOpacity:.15}));
+  else if(P.length>=2) MEAS.shape.addLayer(L.polyline(P,{...st, dashArray: MEAS.mode==="luas"?"6 5":null}));
+  for(const [a,b] of measSegs()){ const d=measLen(a,b); if(d<0.05) continue; MEAS.lab.addLayer(measLabel(L.latLng((a.lat+b.lat)/2,(a.lng+b.lng)/2), measM(d))); }
+  if(MEAS.mode==="luas" && P.length>=3){ const A=measArea(P); if(A!=null) MEAS.lab.addLayer(measLabel(L.polygon(P).getBounds().getCenter(), measA(A), "area")); }
+  measBox();
+}
+function measDraw(){
+  measShape(); MEAS.vtx.clearLayers();
+  MEAS.pts.forEach((ll,i)=>{
+    const v=L.marker(ll,{draggable:true, keyboard:false, icon:L.divIcon({className:"mvx", iconSize:[14,14]})});
+    v.on("drag",e=>{ MEAS.pts[i]=e.target.getLatLng(); measShape(); });
+    v.on("click",e=>{ L.DomEvent.stopPropagation(e); if(MEAS.mode==="luas" && i===0 && MEAS.pts.length>=3) return; });
+    MEAS.vtx.addLayer(v);
+  });
+}
+function measBox(){
+  const P=MEAS.pts, segs=measSegs(); let h="";
+  if(!P.length) h='<div class="mhint">'+(MEAS.mode==="luas" ? "Tap tiap sudut bidang di peta (minimal 3 titik). Hasilnya panjang tiap sisi dan luasnya." : "Tap titik awal dan titik-titik berikutnya di peta buat ngukur jarak.")+'</div>';
+  else {
+    h='<table>';
+    segs.forEach(([a,b],i)=>{ h+='<tr><td>'+(MEAS.mode==="luas"?"Sisi ":"Ruas ")+(i+1)+'</td><td>'+measM(measLen(a,b))+'</td></tr>'; });
+    const tot=segs.reduce((s,[a,b])=>s+measLen(a,b),0);
+    if(MEAS.mode==="luas"){
+      if(P.length>=3){ const A=measArea(P); h+='<tr class="tot"><td>Keliling</td><td>'+measM(tot)+'</td></tr><tr class="tot"><td>Luas</td><td>'+(A!=null?measA(A):"-")+'</td></tr>'; }
+      else h+='<tr><td colspan="2" class="mhint">Tambah '+(3-P.length)+' titik lagi buat dapet luas.</td></tr>';
+    } else if(segs.length) h+='<tr class="tot"><td>Total</td><td>'+measM(tot)+'</td></tr>';
+    h+='</table><div class="mhint" style="margin-top:4px">Titik bisa digeser. Ukuran di proyeksi TM-3 48.2, akurasi tergantung ketelitian tap dan citra.</div>';
+  }
+  $("measOut").innerHTML=h;
+}
+function measAdd(ll){ MEAS.pts.push(ll); measDraw(); }
+function measMode(m){ MEAS.mode=m; $("measJ").classList.toggle("on",m==="jarak"); $("measL").classList.toggle("on",m==="luas"); measDraw(); }
+function measToggle(on){
+  MEAS.on=on; $("measBtn").classList.toggle("on",on); $("measBox").hidden=!on;
+  document.body.classList.toggle("measuring",on);
+  if(!MAP) return;
+  if(on){ MAP.doubleClickZoom.disable(); MAP.closePopup(); measDraw(); }
+  else { MAP.doubleClickZoom.enable(); MEAS.pts=[]; measDraw(); }
+}
+$("measBtn").addEventListener("click",()=>measToggle(!MEAS.on));
+$("measX").addEventListener("click",()=>measToggle(false));
+$("measJ").addEventListener("click",()=>measMode("jarak"));
+$("measL").addEventListener("click",()=>measMode("luas"));
+$("measU").addEventListener("click",()=>{ MEAS.pts.pop(); measDraw(); });
+$("measC").addEventListener("click",()=>{ MEAS.pts=[]; measDraw(); });
+
 $("gpsFollow").addEventListener("change", ()=>{ if($("gpsFollow").checked) gpsStart(); else gpsStop(); });
 $("gpsInfo").addEventListener("click", e=>{ if(e.target.closest("[data-gpsx]")){ $("gpsInfo").hidden=true; return; }
   const g=e.target.closest("[data-goto]"); if(g){ const id=g.dataset.goto; gpsStop(); $("gpsFollow").checked=false; S.tab="zona"; S.fQ=id; $("fQ").value=id; S.fStatus="all"; S.fN="all"; S.open.add(id); saveUI(); render(); return; }

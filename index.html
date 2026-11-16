@@ -1073,11 +1073,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <section class="panel" id="p_peta" role="tabpanel" hidden>
     <div class="toolbar">
       <div class="legend">
-        <span><i class="sw" style="background:color-mix(in srgb,var(--bad) 60%,transparent);border:2px solid #6E140C"></i>SBR gagal</span>
-        <span><i class="sw" style="background:color-mix(in srgb,var(--ok) 50%,transparent);border:2px solid #0B3D24"></i>SBR lolos</span>
-        <span><i class="sw" style="background:rgba(227,181,5,.55);border:2px solid #7A5C00"></i>SBR lolos, titik masih kurang (mis. 2 titik, kurang 1)</span>
-        <span><i class="sw" style="background:rgba(142,68,173,.55);border:2px solid #4A1D63"></i>SBR gagal, titik masih kurang (mis. 2 titik, kurang 1)</span>
-        <span><i class="sw" style="background:color-mix(in srgb,var(--zero) 50%,transparent);border:2px solid #2C3531"></i>1 titik</span>
+        <span><i class="sw" style="background:color-mix(in srgb,var(--bad) 60%,transparent);border:2px solid #6E140C"></i>SBR gagal (3 titik ke atas)</span>
+        <span><i class="sw" style="background:color-mix(in srgb,var(--ok) 50%,transparent);border:2px solid #0B3D24"></i>SBR lolos (3 titik ke atas)</span>
+        <span><i class="sw" style="background:rgba(227,181,5,.55);border:2px solid #7A5C00"></i>2 titik, SBR lolos, kurang 1</span>
+        <span><i class="sw" style="background:rgba(142,68,173,.55);border:2px solid #4A1D63"></i>2 titik, SBR gagal, kurang 1</span>
+        <span><i class="sw" style="background:#D3D8D5;border:2px solid #2C3531"></i>1 titik</span>
         <span><i class="sw" style="background:rgba(31,95,209,.10);border:2px solid #1A4DB3"></i>belum ada titik</span>
         <span><i class="dot" style="background:var(--bad)"></i>titik bikin SBR lewat</span>
         <span><i class="dot" style="background:var(--warn)"></i>data gak lengkap</span>
@@ -2024,8 +2024,8 @@ function zoneGeoKec(id,p){ if(!S.gKecs.size) return ""; if(ZGK.has(id)) return Z
       for(const poly of polys) for(const ring of poly){ for(let i=0,j=ring.length-1;i<ring.length;j=i++){ const xi=ring[i][0], yi=ring[i][1], xj=ring[j][0], yj=ring[j][1]; if(((yi>y)!==(yj>y)) && (x<(xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside; } }
       if(inside){ k=f.properties.kec; break; } } }
   ZGK.set(id,k); return k; }
-function mapCat(z){ return z.n>=2 && z.kurang>0 ? (z.sbrState==="gagal"?"gk":"lk") : z.sbrState; }
-function catPill(z){ const k=mapCat(z);
+function mapCat(z){ return z.n===2 ? (z.sbrState==="gagal"?"gk":"lk") : z.sbrState; }
+function catPill(z){ const k=z.n>=2 && z.kurang>0 ? (z.sbrState==="gagal"?"gk":"lk") : z.sbrState;
   return k==="gk"?`<span class="pill" style="background:rgba(142,68,173,.16);color:#6C2E8C">SBR gagal, kurang ${z.kurang} titik</span>`
        : k==="lk"?`<span class="pill" style="background:rgba(227,181,5,.22);color:#7A5C00">SBR lolos, kurang ${z.kurang} titik</span>`
        : k==="gagal"?'<span class="pill bad">SBR gagal</span>':k==="lolos"?'<span class="pill ok">SBR lolos</span>':'<span class="pill">1 titik</span>'; }
@@ -2040,9 +2040,9 @@ function renderMap(R){
     if(z0 && !z) p._bs = {color:"#8C9792", weight:.6, opacity:.7, fillColor:"#8C9792", fillOpacity:0, cs:0};   // zona bersampel yang gak masuk filter
     else if(!z) p._bs = showEmpty && kecPass(zoneGeoKec(id,p)) ?{color:"#1A4DB3", weight:zw, opacity:1, fillColor:"#1F5FD1", fillOpacity:.08, cs:1}:{opacity:0, fillOpacity:0, cs:0};
     else { const k=mapCat(z);
-      const col = k==="gk"?"#8E44AD" : k==="lk"?"#E3B505" : k==="gagal"?C.bad : k==="lolos"?C.ok : C.zero;
+      const col = k==="gk"?"#8E44AD" : k==="lk"?"#E3B505" : k==="gagal"?C.bad : k==="lolos"?C.ok : "#D3D8D5";
       const stroke = k==="gk"?"#4A1D63" : k==="lk"?"#7A5C00" : k==="gagal"?"#6E140C" : k==="lolos"?"#0B3D24" : "#2C3531";
-      p._bs = {color:stroke, weight:zw, opacity:1, fillColor:col, fillOpacity: k==="gagal"||k==="gk"?.45:k==="lk"?.42:.32, cs:1}; }
+      p._bs = {color:stroke, weight:zw, opacity:1, fillColor:col, fillOpacity: k==="gagal"||k==="gk"?.45:k==="lk"?.42:k==="na"?.8:.32, cs:1}; }
     p.setStyle(zStyle(p._bs)); applyCase(id,p);
   }
   PL.clearLayers(); PMK.clear();
@@ -2176,7 +2176,7 @@ function gpsShow(pos){
   if(!zoneSrc()) h+=`<div class="row">Upload zip zona dulu biar ketahuan lagi di zona mana.</div>`;
   else if(!zo) h+=`<div class="row">Lagi di luar zona (jalan, badan air, atau di luar Jaktim).</div>`;
   else { const zr=R&&R.zById.get(String(zo.id));
-    const st = !zr||!zr.n? "belum ada titik" : mapCat(zr)==="gk"? `SBR gagal, kurang ${zr.kurang} titik` : mapCat(zr)==="lk"? `SBR lolos, kurang ${zr.kurang} titik` : zr.sbrState==="gagal"? "SBR gagal" : zr.sbrState==="lolos"? "SBR lolos" : "1 titik";
+    const st = !zr||!zr.n? "belum ada titik" : mapCat(zr)==="gk"? "2 titik, SBR gagal, kurang 1" : mapCat(zr)==="lk"? "2 titik, SBR lolos, kurang 1" : zr.sbrState==="gagal"? "SBR gagal" : zr.sbrState==="lolos"? "SBR lolos" : "1 titik";
     h+=`<div class="row"><span>Lagi di <b>zona ${esc(zo.id)}</b> · ${st}${zr&&zr.n?` · ${zr.n}/${zr.req} titik`:""}${zr&&isFinite(zr.sbr)?` · SBR ${pct(zr.sbr)}`:""}</span><button type="button" data-goto="${esc(zo.id)}">Buka zona</button></div>`; }
   if(acc>30) h+=`<div class="row" style="color:var(--warn)">Akurasi GPS lagi jelek, posisi bisa meleset ke zona sebelah.</div>`;
   const ne = q && nearestEmpty(q[0],q[1],R);

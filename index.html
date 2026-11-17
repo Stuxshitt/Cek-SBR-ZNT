@@ -1060,7 +1060,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="toolbar">
       <div class="field"><span class="flabel">Jumlah titik di zona</span><div class="chips" id="nChips"></div></div>
       <div class="field"><label for="fStatus">Status</label><select id="fStatus">
-        <option value="all">Semua</option><option value="gagal">SBR gagal</option><option value="lolos">SBR lolos</option><option value="k2l">2 titik, SBR lolos, kurang 1</option><option value="k2g">2 titik, SBR gagal, kurang 1</option><option value="satuN">1 titik sampel normal</option><option value="satuI">1 titik individual (zona khusus)</option><option value="kosong">Belum ada titik</option><option value="indiv">Sampel individual lebih dari batas</option></select></div>
+        <option value="all">Semua</option><option value="bersampel">Zona bersampel</option><option value="gagal">SBR gagal</option><option value="lolos">SBR lolos</option><option value="k2l">2 titik, SBR lolos, kurang 1</option><option value="k2g">2 titik, SBR gagal, kurang 1</option><option value="satuN">1 titik sampel normal</option><option value="satuI">1 titik individual (zona khusus)</option><option value="kosong">Belum ada titik</option><option value="indiv">Sampel individual lebih dari batas</option></select></div>
       <div class="field"><label for="fQ">Cari NOZN / surveyor</label><input type="text" id="fQ" placeholder="misal 1376 atau Sri"></div>
       <div class="spacer"></div>
       <span class="copied" id="copied1" aria-live="polite"></span>
@@ -1816,7 +1816,8 @@ function render(){
   const tile=(key,cls,label,v,sub)=>`<button class="stat ${cls}${S.fStatus===key?" on":""}" data-f="${key}"><span class="eyebrow">${label}</span><span class="v">${v}</span><span class="s">${sub}</span></button>`;
   const dinilai=cnt.gagal+cnt.lolos;
   $("summary").innerHTML =
-    tile("all","","Zona bersampel",fmt(Z.length),filtOn()?`sesuai filter kecamatan/surveyor`:`dari ${fmt(S.zoneCount||0)} zona`)+
+    tile("all","","Semua",fmt(S.zoneCount||0),"zona di layer, termasuk yang belum ada titik")+
+    tile("bersampel","","Zona bersampel",fmt(Z.length),filtOn()?`sesuai filter kecamatan/surveyor`:`dari ${fmt(S.zoneCount||0)} zona`)+
     tile("gagal","bad",`SBR gagal (&gt; ${P.thr}%)`,fmt(cnt.gagal),`dari ${fmt(dinilai)} zona yang ≥ 2 titik`)+
     tile("lolos","ok",`SBR lolos (≤ ${P.thr}%)`,fmt(cnt.lolos),dinilai?`${pct(cnt.lolos/dinilai*100,0)} dari zona yang bisa dihitung`:"belum ada")+
     tile("k2l","warn","2 titik, SBR lolos",fmt(cc.k2l),"kurang 1 titik buat jadi 3")+
@@ -1831,7 +1832,10 @@ function render(){
   $("fStatus").value=S.fStatus;
   const q=S.fQ.trim().toLowerCase();
   const rows=Z.filter(z=>(S.fN==="all"||nBucket(z.n)===S.fN) && (S.fStatus==="all" || CAT[S.fStatus] ? (S.fStatus==="all" || CAT[S.fStatus](z)) : (S.fStatus==="kurang"? z.kurang>0 : S.fStatus==="indiv"? z.indOver : z.sbrState===S.fStatus)) && (!S.fKec||z.kec===S.fKec) && (!q || String(z.id).includes(q) || z.svs.some(s=>s.toLowerCase().includes(q))));
-  if(S.fStatus==="kosong") renderKosong(KOS.filter(k=>!q || String(k.id).includes(q) || k.akun.toLowerCase().includes(q))); else renderZones(rows);
+  const KQ=KOS.filter(k=>!q || String(k.id).includes(q) || k.akun.toLowerCase().includes(q));
+  if(S.fStatus==="kosong") renderKosong(KQ); else renderZones(rows);
+  if(S.fStatus==="all" && S.fN==="all" && !S.fKec && S.sample && KQ.length){ const tb=$("zt").querySelector("tbody");
+    if(tb){ if(!rows.length) tb.innerHTML=""; tb.insertAdjacentHTML("beforeend", KQ.map(k=>`<tr class="z s-na"><td class="zn" data-l="NOZN">${esc(k.id)}</td><td colspan="7" class="muted" data-l="">Belum ada titik · akun (perkiraan): ${esc(k.akun)}</td><td data-l=""><button class="mbtn" data-map="${esc(k.id)}">Lihat di peta</button></td></tr>`).join("")); } }
   renderProbs(R);
   if(S.tab==="peta") renderMap(R);
   renderSearch();
@@ -1839,7 +1843,7 @@ function render(){
 }
 function zoneCats(){
   const tt=z=>z.ss.filter(s=>s.ok||s.kind==="indkos");
-  return { k2l:z=>tt(z).length===2 && z.sbrState!=="gagal", k2g:z=>tt(z).length===2 && z.sbrState==="gagal",
+  return { bersampel:()=>true, k2l:z=>tt(z).length===2 && z.sbrState!=="gagal", k2g:z=>tt(z).length===2 && z.sbrState==="gagal",
     satuN:z=>{ const a=tt(z); return a.length===1 && !a[0].isInd; }, satuI:z=>{ const a=tt(z); return a.length===1 && a[0].isInd; } };
 }
 function kosongZones(R){
